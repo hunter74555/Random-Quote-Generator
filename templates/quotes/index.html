@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h2>Random Quote</h2>
+            </div>
+            <div class="card-body">
+                {% if quote %}
+                <blockquote class="blockquote mb-4">
+                    <p class="lead">"{{ quote.text }}"</p>
+                    <footer class="blockquote-footer">
+                        {{ quote.source }} (Weight: {{ quote.weight }})
+                    </footer>
+                </blockquote>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                        <button class="btn btn-outline-success like-btn" data-quote-id="{{ quote.id }}">
+                            👍 <span class="likes-count">{{ quote.likes }}</span>
+                        </button>
+                        <button class="btn btn-outline-danger dislike-btn" data-quote-id="{{ quote.id }}">
+                            👎 <span class="dislikes-count">{{ quote.dislikes }}</span>
+                        </button>
+                    </div>
+                    <small class="text-muted">Views: {{ quote.views }}</small>
+                </div>
+                {% else %}
+                <p class="text-center">No quotes yet. <a href="/add/">Add first quote!</a></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-3 text-center">
+            <p>Total quotes: {{ total_quotes }}</p>
+            <a href="/" class="btn btn-primary">Next quote</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.like-btn, .dislike-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const quoteId = this.dataset.quoteId;
+            const isLike = this.classList.contains('like-btn');
+            const url = isLike ? `/quote/${quoteId}/like/` : `/quote/${quoteId}/dislike/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector(`.like-btn[data-quote-id="${quoteId}"] .likes-count`).textContent = data.likes;
+                document.querySelector(`.dislike-btn[data-quote-id="${quoteId}"] .dislikes-count`).textContent = data.dislikes;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
